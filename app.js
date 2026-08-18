@@ -34,6 +34,7 @@ const armSvg  = $('[data-arm]');
 const armLimb = $('[data-arm-limb]');
 const armHand = $('[data-arm-hand]');
 const lens    = $('[data-lens]');
+const cursor  = $('[data-cursor]');
 const trail   = $('[data-trail]');
 const bubble  = $('[data-bubble]');
 const bubbleText = $('[data-bubble-text]');
@@ -391,6 +392,15 @@ function frame(now) {
   scene.style.setProperty('--ly', S.ly.toFixed(1));
   lens.style.setProperty('--handle', ((Math.atan2(uy, ux) * 180) / Math.PI).toFixed(1));
 
+  /* The drawn pointer stands on the RIM, on the side away from the handle, so
+     the arrow, the handle and the arm never stack up in the same corner — and
+     it leans in, tip on the glass, pointing at whatever is under it. The art
+     points up-left at rest, hence the 135°. */
+  const cr = M.lensR + 1;
+  cursor.style.setProperty('--cx', (S.lx - ux * cr).toFixed(1));
+  cursor.style.setProperty('--cy', (S.ly - uy * cr).toFixed(1));
+  cursor.style.setProperty('--ca', ((Math.atan2(uy, ux) * 180) / Math.PI + 135).toFixed(1));
+
   /* 9 — he only speaks once he has stopped, and stops speaking the moment he
          moves again */
   speak(moving);
@@ -527,6 +537,9 @@ function pose() {
   armHand.setAttribute('cx', hand.x.toFixed(1));
   armHand.setAttribute('cy', hand.y.toFixed(1));
   lens.style.setProperty('--handle', ((Math.atan2(dy, dx) * 180) / Math.PI).toFixed(1));
+  cursor.style.setProperty('--cx', (S.lx - (dx / d) * (M.lensR + 1)).toFixed(1));
+  cursor.style.setProperty('--cy', (S.ly - (dy / d) * (M.lensR + 1)).toFixed(1));
+  cursor.style.setProperty('--ca', ((Math.atan2(dy, dx) * 180) / Math.PI + 135).toFixed(1));
 }
 
 /* ----------------------------------------------------------------- boot -- */

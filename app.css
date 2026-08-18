@@ -350,6 +350,40 @@ body {
   transform: rotate(calc(var(--handle, 0) * 1deg)) translateX(calc(var(--lens-r) - 6px));
 }
 
+/* --------------------------------------------------------------- cursor -- */
+
+.cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 47px;        /* the art's 30×32, scaled 1.47 */
+  pointer-events: none;
+  /* The origin is the arrow's TIP, so --cx/--cy place the tip exactly and the
+     rotation happens about it — the point that means something is the point
+     that must not move. */
+  transform-origin: 5.9px 3.8px;
+  /* the loop owns position and angle; only the fade is the stylesheet's */
+  transform:
+    translate(calc(var(--cx, -999) * 1px - 5.9px), calc(var(--cy, -999) * 1px - 3.8px))
+    rotate(calc(var(--ca, 0) * 1deg));
+  opacity: 0;
+  transition: opacity .22s linear;
+  filter: drop-shadow(0 3px 6px rgba(42, 26, 18, .28));
+}
+
+/* It exists only while the component is actually holding the pointer. Before
+   that the real cursor is still doing its job, and two pointers is one too
+   many. */
+.scene[data-mode='live'] .cursor { opacity: 1; }
+
+.cursor svg { display: block; width: 100%; height: 100%; }
+
+/* A finger has no pointer to draw. */
+@media (hover: none), (pointer: coarse) {
+  .cursor { display: none; }
+}
+
 /* --------------------------------------------------------------- bubble -- */
 
 .bubble {
