@@ -34,7 +34,6 @@ const armSvg  = $('[data-arm]');
 const armLimb = $('[data-arm-limb]');
 const armHand = $('[data-arm-hand]');
 const lens    = $('[data-lens]');
-const cursor  = $('[data-cursor]');
 const trail   = $('[data-trail]');
 const bubble  = $('[data-bubble]');
 const bubbleText = $('[data-bubble-text]');
@@ -225,7 +224,11 @@ function frame(now) {
      genuinely no longer works. */
   if (Math.abs(S.lx - S.bx) > M.birdW * 0.8) S.side = S.lx > S.bx ? 1 : -1;
 
-  const want = clamp(S.lx - S.side * standoff, M.w * 0.08, M.w * 0.92);
+  /* Keep the WHOLE bird in the room, not just his anchor point. A fraction of
+     the width was fine while he lived in an inset panel; on a full-bleed floor
+     it walks half of him off the edge. */
+  const edge = M.birdW * 0.42;
+  const want = clamp(S.lx - S.side * standoff, edge, M.w - edge);
   const gap  = want - S.bx;
   const prevX = S.bx;
 
@@ -392,14 +395,6 @@ function frame(now) {
   scene.style.setProperty('--ly', S.ly.toFixed(1));
   lens.style.setProperty('--handle', ((Math.atan2(uy, ux) * 180) / Math.PI).toFixed(1));
 
-  /* The drawn pointer stands on the RIM, on the side away from the handle, so
-     the arrow, the handle and the arm never stack up in the same corner — and
-     it leans in, tip on the glass, pointing at whatever is under it. The art
-     points up-left at rest, hence the 135°. */
-  const cr = M.lensR + 1;
-  cursor.style.setProperty('--cx', (S.lx - ux * cr).toFixed(1));
-  cursor.style.setProperty('--cy', (S.ly - uy * cr).toFixed(1));
-  cursor.style.setProperty('--ca', ((Math.atan2(uy, ux) * 180) / Math.PI + 135).toFixed(1));
 
   /* 9 — he only speaks once he has stopped, and stops speaking the moment he
          moves again */
@@ -485,9 +480,12 @@ function point(e) {
   }
 }
 
-scene.addEventListener('pointermove', point);
-scene.addEventListener('pointerdown', point);
-scene.addEventListener('pointerleave', (e) => {
+/* The room is the page, so the pointer is watched on the window: the glass
+   keeps following even where the copy lies on top of the scene, and the piece
+   never stalls because you crossed the headline. */
+addEventListener('pointermove', point);
+addEventListener('pointerdown', point);
+document.addEventListener('pointerleave', (e) => {
   /* Only a mouse ever really leaves. A finger lifts off after every tap, and
      handing the floor back on lift-off would mean touch never got to hold the
      glass at all. */
@@ -537,9 +535,6 @@ function pose() {
   armHand.setAttribute('cx', hand.x.toFixed(1));
   armHand.setAttribute('cy', hand.y.toFixed(1));
   lens.style.setProperty('--handle', ((Math.atan2(dy, dx) * 180) / Math.PI).toFixed(1));
-  cursor.style.setProperty('--cx', (S.lx - (dx / d) * (M.lensR + 1)).toFixed(1));
-  cursor.style.setProperty('--cy', (S.ly - (dy / d) * (M.lensR + 1)).toFixed(1));
-  cursor.style.setProperty('--ca', ((Math.atan2(dy, dx) * 180) / Math.PI + 135).toFixed(1));
 }
 
 /* ----------------------------------------------------------------- boot -- */
@@ -591,7 +586,7 @@ addEventListener('resize', () => {
   measure();
   if (reduced.matches) pose();
   else {
-    S.bx = clamp(S.bx, M.w * 0.08, M.w * 0.92);
+    S.bx = clamp(S.bx, M.birdW * 0.42, M.w - M.birdW * 0.42);
     S.lx = clamp(S.lx, 40, M.w - 40);
     S.ly = clamp(S.ly, 40, M.groundY - 10);
   }

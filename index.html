@@ -190,33 +190,6 @@
         <circle class="arm__hand" data-arm-hand r="13" cx="0" cy="0" />
       </svg>
 
-      <!--
-        Layer 7½ — the pointer itself, drawn rather than borrowed. The system
-        cursor is hidden while the component owns the board, so something has to
-        say "this is you" — and a flat vermilion arrow says it in the page's own
-        palette instead of the operating system's.
-
-        It is pinned to the RIM of the glass, tip pointing in at the centre, so
-        it never sits on top of the one thing the page is about: the thing under
-        the lens. The hotspot is still the middle of the disc.
-      -->
-      <div class="cursor" data-cursor aria-hidden="true">
-        <svg viewBox="0 0 30 32" fill="none">
-          <defs>
-            <linearGradient id="sleuth-cursor" x1="4" y1="2" x2="24" y2="30" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="#ff9a3c" />
-              <stop offset=".48" stop-color="#e4674f" />
-              <stop offset="1" stop-color="#b8412a" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M4 2.6 24.2 15.1 15.1 16.4 18.7 25.1 13.9 27.1 10.3 18.3 4 23.6Z"
-            fill="url(#sleuth-cursor)" stroke="#fff6e6" stroke-width="2.4" stroke-linejoin="round" />
-          <path d="M7.2 7.4 16.6 13.2 11.4 14 12.9 17.6" stroke="#ffd8a8" stroke-width="1.6"
-                stroke-linecap="round" stroke-linejoin="round" opacity=".7" />
-        </svg>
-      </div>
-
       <!-- Layer 7 — the glass. The handle turns to point back down the arm. -->
       <div class="lens" data-lens aria-hidden="true">
         <span class="lens__handle"></span>
