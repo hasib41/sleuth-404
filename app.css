@@ -1,0 +1,450 @@
+/* ==========================================================================
+   SLEUTH — 404, with the magnifier on the end of the cursor.
+   Co-located with this folder's index.html. Zero dependencies.
+
+   The loop writes numbers. This file draws them. Every moving thing here is a
+   transform or an opacity, with exactly one exception — the clip-path circle
+   that is the glass, which has to be a clip because that is what a lens is.
+   ========================================================================== */
+
+:root {
+  /* Flat-illustration palette: warm paper, one dark ink, one red, one beak. */
+  --page:   #f7ead3;
+  --floor:  #fdf3e1;   /* the scene panel */
+  --ghost:  #f3e0b6;   /* the un-inspected 404 */
+  --ink:    #2a1a12;   /* the bird, and the type */
+  --ink-2:  #3b271c;   /* the wing plate */
+  --muted:  #6b5546;   /* on --page: 6.6:1 */
+  --red:    #e4674f;   /* decorative only — crest, spots, ring */
+  --red-ink:#b8412a;   /* red that carries text: 5.5:1 on white, 4.6:1 on paper */
+  --beak:   #f2a93b;
+  --hair:   rgba(42, 26, 18, .14);
+
+  /* the glass. --lens-r is the visible radius; the clip is drawn smaller by
+     exactly the magnification, because the scale grows it back to this. */
+  --mag:     1.3;
+  --lens-r:  76px;
+  --clip-r:  calc(var(--lens-r) / 1.3);
+
+  --bird-h:  clamp(152px, 27vh, 220px);
+
+  /* The single source of truth for the floor. The stylesheet paints against it
+     and app.js READS it — two hardcoded 54s in two files is a bug waiting for
+     whoever changes one of them. */
+  --ground: 78;
+
+  --wall-hi:  #f9f0dc;
+  --wall-lo:  #efdfc0;
+  /* The boards are browner than the wall, not just darker. A floor that is only
+     a darker tint of the wall reads as a stripe; a shift in hue reads as a
+     different material, which is the whole job of this band. */
+  --board-hi: #e6d2ab;
+  --board-lo: #dbc294;
+  --seam:     rgba(60, 38, 20, .10);
+
+  --r-panel: 28px;
+  --ease:    cubic-bezier(.22, 1, .36, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  min-height: 100dvh;
+  background: var(--page);
+  color: var(--ink);
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 40px);
+}
+
+/* A paper tooth over the whole page: one fixed layer, never animated. */
+.paper {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .3;
+  background-image:
+    url('./textures/grain.png'),
+    radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(100% 70% at 50% 110%, rgba(42,26,18,.10), transparent 62%);
+  background-size: 340px 340px, auto, auto;
+  background-blend-mode: soft-light, normal, normal;
+}
+
+.stage {
+  width: min(1040px, 100%);
+  display: grid;
+  gap: clamp(14px, 2.4vh, 26px);
+}
+
+/* ---------------------------------------------------------------- scene -- */
+
+.scene {
+  position: relative;
+  height: clamp(300px, 52vh, 520px);   /* the words gave their space to this */
+  border-radius: var(--r-panel);
+  /* The wall: a warm wash with the light coming from above, and the weave of
+     the paper in it — the same 14px grid the lens layer carries, at a twentieth
+     of the contrast. That is what makes the glass read as MAGNIFICATION rather
+     than as a window onto some other surface: it is the same floor, closer. */
+  background-image:
+    radial-gradient(circle at center, rgba(42, 26, 18, .026) 1.1px, transparent 1.2px),
+    radial-gradient(88% 62% at 50% 6%, var(--wall-hi), transparent 72%),
+    linear-gradient(180deg, var(--wall-hi) 0%, var(--wall-lo) 100%);
+  background-size: 14px 14px, auto, auto;
+  border: 1px solid var(--hair);
+  /* a room has corners, and corners are darker */
+  box-shadow: inset 0 0 70px rgba(42, 26, 18, .05), inset 0 -30px 60px -40px rgba(42, 26, 18, .3);
+  overflow: hidden;
+  isolation: isolate;
+  touch-action: none;
+}
+
+/* The cursor only disappears once the rig has actually taken it over. */
+.scene[data-mode='live'] { cursor: none; }
+
+/* The address stands ON the floor the bird is sweeping, rather than floating
+   in the middle of the board. One shared ground line is the difference between
+   a scene and two things in a box. */
+.glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: end center;
+  padding-bottom: calc(var(--ground, 54) * 1px - 8px);
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  /* Sized by the SHORTER constraint. Height alone overflows a phone: three
+     digits run about 1.8em wide, and a 40vh glyph on a 390px screen is half
+     again wider than the board it stands in. */
+  font-size: max(4.5rem, min(40vh, 46vw));
+  line-height: .8;
+  letter-spacing: .04em;
+  user-select: none;
+}
+
+/* Painted, not filled: a top-lit gradient through the digits, so they read as
+   something standing in the room rather than a flat colour value. */
+.glyph--base {
+  color: var(--ghost);
+  background: linear-gradient(180deg, #f1daaa 0%, #e2c684 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.glyph--lit {
+  background: linear-gradient(180deg, #d59c3a 0%, #ae7418 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/*
+  The lens layer. The clip circle sits at the glass; the scale is taken about
+  that same point, so the circle is a fixed point of the transform and the disc
+  cannot drift off the ring. Growing everything inside it is the magnification.
+*/
+/* The floor has a weave. Nobody can see it at arm's length — it is only there
+   so the glass always has something to enlarge, even over bare boards. */
+.found {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at center, rgba(42, 26, 18, .17) 1.1px, transparent 1.2px),
+    repeating-linear-gradient(90deg, rgba(42, 26, 18, .05) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(0deg,  rgba(42, 26, 18, .05) 0 1px, transparent 1px 9px);
+  background-size: 14px 14px, auto, auto;
+  clip-path: circle(var(--clip-r) at calc(var(--lx, -999) * 1px) calc(var(--ly, -999) * 1px));
+  transform: scale(var(--mag));
+  transform-origin: calc(var(--lx, 0) * 1px) calc(var(--ly, 0) * 1px);
+  will-change: clip-path, transform;
+}
+
+/* The case notes. Only ever seen through the glass — the floor has already
+   been searched, and this is the paperwork. */
+.note {
+  position: absolute;
+  left: var(--nx);
+  top: var(--ny);
+  transform: translate(-50%, -50%) rotate(-4deg);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--red-ink);
+  white-space: nowrap;
+}
+.note:nth-child(odd) { transform: translate(-50%, -50%) rotate(5deg); }
+
+/* Dust. Nine elements, each drifting a few dozen pixels over twenty-odd
+   seconds — long enough that no two are ever in step, cheap enough that the
+   whole layer is one composited paint. */
+.dust { position: absolute; inset: 0; pointer-events: none; }
+
+.dust i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: rgba(42, 26, 18, .32);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: drift var(--dur) linear infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes drift {
+  0%        { transform: translate3d(0, 0, 0);                opacity: 0; }
+  18%, 82%  {                                                 opacity: .16; }
+  100%      { transform: translate3d(var(--dx), var(--dy), 0); opacity: 0; }
+}
+
+.trail { position: absolute; inset: 0; pointer-events: none; }
+
+/* A footfall. Spawned at the foot that landed, faded out on its own clock and
+   removed — the trail is a queue, never a growing DOM. */
+.print {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 13px;
+  height: 8px;
+  border-radius: 50% 50% 44% 44%;
+  background: rgba(42, 26, 18, .16);
+  transform:
+    translate(calc(var(--fx) * 1px - 50%), calc(var(--fy) * 1px - 50%))
+    scaleX(var(--fd, 1)) rotate(var(--fr, 0deg));
+  opacity: 0;
+  transition: opacity .5s linear;
+}
+.print.is-in { opacity: 1; }
+
+/* The boards. Plank seams, and the light from the window pooling on them —
+   which is also, conveniently, the brightest part of the surface the glass
+   spends most of its time over. */
+.floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--ground) * 1px);
+  background-image:
+    /* the wall casts onto the boards it meets */
+    linear-gradient(180deg, rgba(42, 26, 18, .10), transparent 18px),
+    radial-gradient(96% 150% at 50% -14%, rgba(255, 255, 255, .26), transparent 70%),
+    /* two periods, so the planks are not a metronome: a seam every 66px and a
+       stronger one every third, which is what a laid floor actually looks like */
+    repeating-linear-gradient(90deg, transparent 0 198px, rgba(60, 38, 20, .16) 198px 199px),
+    repeating-linear-gradient(90deg, transparent 0 66px, var(--seam) 66px 67px),
+    linear-gradient(180deg, var(--board-hi), var(--board-lo));
+}
+
+/* The skirting board along the join: one dark line under one light one, which
+   is the whole trick for making two flat planes meet at a right angle. */
+.ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--ground) * 1px);
+  height: 3px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .65) 0 1px, rgba(42, 26, 18, .16) 1px 3px);
+}
+
+/* ----------------------------------------------------------------- bird -- */
+
+.bird {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--bird-h) * 240 / 260);
+  transform-origin: 50% 100%;
+  /* --bx/--by are the bird's ground anchor in scene pixels, so the flip is a
+     mirror about the feet and nothing else in here has to know about it. */
+  transform:
+    translate(calc(var(--bx, 0) * 1px - 50%), calc(var(--by, 0) * 1px - 100%))
+    scaleX(var(--face, 1));
+}
+
+.bird__svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* Every part rotates in view-box coordinates about a hinge given in those same
+   coordinates — the one reliable way to hinge an SVG group. */
+.bird__body, .bird__wing, .eye__pupil { transform-box: view-box; }
+
+.bird__shadow { fill: rgba(42, 26, 18, .13); }
+
+.bird__body {
+  transform-origin: 118px 216px;
+  transform: translateY(calc(var(--bob, 0) * 1px)) rotate(calc(var(--lean, 0) * 1deg));
+}
+
+.bird__blob, .bird__tail { fill: var(--ink); }
+.bird__crest path { fill: var(--red); }
+.bird__beak { fill: var(--beak); }
+.bird__spots circle { fill: var(--red); }
+.eye__white { fill: #fff; }
+.eye__pupil { fill: var(--ink); transform: translate(calc(var(--px, 0) * 1px), calc(var(--py, 0) * 1px)); }
+.eye__spark { fill: #fff; opacity: .9; }
+
+.bird__head { transform: translateX(calc(var(--hx, 0) * 1px)); }
+
+.bird__wing { transform-origin: 140px 150px; transform: rotate(calc(var(--wing, 0) * 1deg)); }
+.wing__plate { fill: var(--ink-2); }
+.wing__swirl { stroke: #fdf3e1; stroke-width: 5; stroke-linecap: round; fill: none; }
+
+/* Nothing in here may transform a leg. Both segments are solved and written
+   as path data every frame; a CSS rotation on top would be a second writer. */
+.leg__limb, .leg__toes { stroke: var(--ink); stroke-width: 10; stroke-linecap: round;
+  stroke-linejoin: round; fill: none; }
+.leg:first-of-type .leg__limb,
+.leg:first-of-type .leg__toes { stroke: #4a3226; }   /* the far leg, in shade */
+
+/* ------------------------------------------------------------ arm + glass */
+
+.arm { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.arm__limb { stroke: var(--ink); stroke-width: var(--arm-w, 11); stroke-linecap: round; fill: none; }
+.arm__hand { fill: var(--ink); }
+
+.lens {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--lens-r) * 2);
+  height: calc(var(--lens-r) * 2);
+  transform: translate(calc(var(--lx, -999) * 1px - 50%), calc(var(--ly, -999) * 1px - 50%));
+}
+
+.lens__ring, .lens__glass { position: absolute; inset: 0; border-radius: 50%; }
+
+.lens__glass {
+  background:
+    linear-gradient(140deg, rgba(255,255,255,.30), rgba(255,255,255,0) 42%, rgba(255,255,255,.12));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
+}
+
+.lens__ring {
+  border: 9px solid var(--ink);
+  box-shadow: 0 6px 18px rgba(42, 26, 18, .18);
+}
+
+.lens__handle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 62px;
+  height: 15px;
+  margin-top: -7.5px;
+  border-radius: 99px;
+  background: var(--ink);
+  transform-origin: 0 50%;
+  transform: rotate(calc(var(--handle, 0) * 1deg)) translateX(calc(var(--lens-r) - 6px));
+}
+
+/* --------------------------------------------------------------- bubble -- */
+
+.bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 8px 14px 9px;
+  border-radius: 14px 14px 14px 4px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: .95rem;
+  white-space: nowrap;
+  transform-origin: 0 100%;
+  transform:
+    translate(calc(var(--sx, 0) * 1px), calc(var(--sy, 0) * 1px - 100%))
+    scale(var(--say, 0));
+  opacity: var(--say, 0);
+  transition: transform .34s var(--ease), opacity .2s linear;
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------------- copy -- */
+
+.copy { display: grid; gap: 8px; justify-items: center; text-align: center; }
+
+.copy__title {
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.1rem, 6.4vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -.02em;
+}
+
+.copy__sub {
+  color: var(--muted);
+  font-size: clamp(1rem, 1.7vw, 1.12rem);
+  line-height: 1.4;
+}
+
+.copy__actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 6px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  height: 3rem;
+  padding: 0 1.5rem;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: .98rem;
+  text-decoration: none;
+  transition: transform .18s var(--ease), background-color .18s linear;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn:focus-visible { outline: 3px solid var(--red-ink); outline-offset: 3px; }
+
+.btn--go { background: var(--red-ink); color: #fff; }   /* 5.5:1 */
+.btn--go:hover { background: #a03722; }
+
+/* Said to a screen reader, drawn to nobody: the affordance and the
+   reduced-motion notice are real information, they are just not clutter. */
+.u-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* ------------------------------------------------------------- fallbacks -- */
+
+/* No JS: the rig never gets numbers, so park it out of the way rather than
+   leaving a lens and a severed arm sitting at 0,0. */
+html:not(.js) .lens,
+html:not(.js) .arm,
+html:not(.js) .found,
+html:not(.js) .bubble { display: none; }
+html:not(.js) .bird { left: 50%; top: calc(100% - 54px); transform: translate(-50%, -100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* the dust settles */
+  .dust i { animation: none; opacity: .12; }
+  .bird, .bird__body, .leg, .bird__wing { transition: none !important; }
+  .bubble { transition: none; }
+  .btn:hover { transform: none; }
+}
+
+@media (max-width: 620px) {
+  /* A phone gets a smaller floor, so it gets a smaller bird and a smaller
+     glass — the standoff and the stride are both derived from his width, so
+     the whole gait rescales off this one line. */
+  :root { --lens-r: 56px; --clip-r: calc(56px / 1.3); --bird-h: clamp(112px, 17vh, 160px); --ground: 56; }
+  .scene { height: clamp(300px, 40vh, 420px); }
+  .note { font-size: .68rem; }
+  .lens__handle { width: 46px; height: 12px; margin-top: -6px; }
+}

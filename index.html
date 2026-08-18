@@ -1,0 +1,227 @@
+<!doctype html>
+<!--
+  SLEUTH — a 404 page where the investigator is the mechanism.
+
+  The reference for this one is the flat "walking investigator" 404 illustration
+  that goes around as a GIF. A GIF is a film of a bird: it walks the same eight
+  frames forever and it does not know you are there. This is the bird, rebuilt
+  as a part — one rAF loop, plain SVG, zero dependencies — so it actually does
+  the job the picture only mimes:
+
+    · the magnifier is your cursor. It is not decoration, it is a lens: the
+      layer underneath is a second, sharper copy of the 404 that is clipped to
+      the glass and scaled about its centre, so what you see through it is
+      genuinely magnified rather than merely tinted;
+    · under the glass, and only under the glass, the floor is covered in the
+      case notes — swept · nothing · checked twice — the evidence that somebody
+      already looked here;
+    · the bird walks to you. It keeps a standoff, turns to face the glass,
+      and its stride is driven by distance travelled, not by a clock, so the
+      feet never skate: cross the page fast and it runs, nudge the mouse and it
+      shuffles one step;
+    · its arm is drawn to the lens every frame, its eye tracks the lens, and it
+      leaves footprints in the direction it actually walked.
+
+  Before you touch anything it patrols on its own — it has a floor to sweep —
+  and the moment a pointer arrives it hands over.
+
+  The page underneath is a real 404 and stays one: a single h1, the copy, a
+  home link and a report link, all reachable and readable with the whole rig
+  switched off. Touch gets a bird that walks to the tap; prefers-reduced-motion
+  gets a standing bird, a parked lens and no chase; no JS at all still gets the
+  page. Transform, opacity and one clip-path — nothing else animates.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Page Not Found · SLEUTH</title>
+  <meta name="description" content="A 404 page whose magnifying glass is your cursor: an investigator bird walks to wherever you point, and the floor only gives up its case notes under the glass." />
+  <meta name="theme-color" content="#fdf1dd" />
+  <meta name="robots" content="noindex" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="404 — Page Not Found · SLEUTH" />
+  <meta property="og:description" content="The magnifier is the cursor. The bird walks to you. The floor only talks under the glass." />
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="stylesheet" href="./app.css" />
+</head>
+<body>
+  <div class="paper" aria-hidden="true"></div>
+
+  <main class="stage">
+    <!--
+      The scene. Everything the loop moves lives in here and is positioned in
+      this box's coordinates, so one measurement per resize serves the lens,
+      the bird, the arm and the prints alike.
+    -->
+    <section class="scene" data-scene data-mode="patrol">
+      <!--
+        Layer 0 — the room. Wall above, boards below, a skirting board along the
+        join. It is all painted with gradients on two empty elements: the scene
+        stops being a card with a bird on it and becomes a place the bird is
+        standing in, and the address gets a wall to stand against.
+      -->
+      <span class="floor" aria-hidden="true"></span>
+
+      <!-- Layer 1 — the address, standing on the boards. -->
+      <p class="glyph glyph--base" aria-hidden="true">404</p>
+
+      <!--
+        Layer 2 — the same 404, sharp, plus the case notes. Clipped to a circle
+        at the lens and scaled about that exact point, so the circle is a fixed
+        point of the scale: the disc stays glued to the glass while everything
+        inside it grows. That is a magnifier, not a spotlight.
+      -->
+      <div class="found" data-found aria-hidden="true">
+        <p class="glyph glyph--lit">404</p>
+        <span class="note" style="--nx:12%; --ny:22%">swept</span>
+        <span class="note" style="--nx:74%; --ny:16%">nothing</span>
+        <span class="note" style="--nx:31%; --ny:70%">checked twice</span>
+        <span class="note" style="--nx:86%; --ny:62%">no crumbs</span>
+        <span class="note" style="--nx:52%; --ny:88%">still gone</span>
+        <span class="note" style="--nx:6%;  --ny:56%">looked here</span>
+        <span class="note" style="--nx:63%; --ny:40%">not this one</span>
+        <span class="note" style="--nx:22%; --ny:44%">empty</span>
+        <span class="note" style="--nx:44%; --ny:14%">dusted</span>
+        <span class="note" style="--nx:92%; --ny:34%">no trace</span>
+        <span class="note" style="--nx:38%; --ny:32%">moved out</span>
+        <span class="note" style="--nx:70%; --ny:80%">nobody home</span>
+        <span class="note" style="--nx:16%; --ny:84%">case cold</span>
+      </div>
+
+      <!--
+        Layer 2½ — the air. Nine motes, drifting on the compositor and nothing
+        else: no rAF, no layout, transform and opacity only. They are what stops
+        the top half of the room reading as blank paper.
+      -->
+      <div class="dust" aria-hidden="true">
+        <i style="--x:12%; --y:26%; --s:5px;   --dx:34px;  --dy:-46px; --dur:19s; --delay:-2s"></i>
+        <i style="--x:26%; --y:52%; --s:3.5px; --dx:-26px; --dy:-38px; --dur:24s; --delay:-9s"></i>
+        <i style="--x:38%; --y:18%; --s:4px;   --dx:22px;  --dy:40px;  --dur:21s; --delay:-14s"></i>
+        <i style="--x:49%; --y:63%; --s:3px;   --dx:30px;  --dy:-30px; --dur:27s; --delay:-5s"></i>
+        <i style="--x:61%; --y:31%; --s:5.5px; --dx:-32px; --dy:34px;  --dur:23s; --delay:-17s"></i>
+        <i style="--x:72%; --y:57%; --s:3.5px; --dx:24px;  --dy:-44px; --dur:20s; --delay:-11s"></i>
+        <i style="--x:84%; --y:22%; --s:4.5px; --dx:-20px; --dy:42px;  --dur:26s; --delay:-3s"></i>
+        <i style="--x:92%; --y:47%; --s:3px;   --dx:-28px; --dy:-32px; --dur:22s; --delay:-20s"></i>
+        <i style="--x:5%;  --y:68%; --s:4px;   --dx:26px;  --dy:-36px; --dur:25s; --delay:-7s"></i>
+      </div>
+
+      <!-- Layer 3 — the trail. Prints are spawned one per footfall, capped,
+           and expire on their own; the loop only ever writes their transform. -->
+      <div class="trail" data-trail aria-hidden="true"></div>
+
+      <!-- Layer 4 — the floorboard the bird stands on. -->
+      <span class="ground" aria-hidden="true"></span>
+
+      <!-- Layer 5 — the bird. Facing right by default; the loop flips it with
+           scaleX and nothing else, so the arm below never has to know. -->
+      <div class="bird" data-bird aria-hidden="true">
+        <svg class="bird__svg" viewBox="0 0 240 260" fill="none">
+          <ellipse class="bird__shadow" data-shadow cx="118" cy="250" rx="66" ry="8" />
+
+          <!--
+            Two segments per leg with a backward knee, and NO fixed geometry:
+            the loop is given where each foot must be and solves the joint for
+            it. That is the whole difference between a bird walking and a pair
+            of sticks swinging — a foot that is planted stays planted.
+          -->
+          <g class="bird__legs" data-legs>
+            <g class="leg">
+              <path class="leg__limb" data-limb="back" d="" />
+              <path class="leg__toes" data-toes="back" d="" />
+            </g>
+            <g class="leg">
+              <path class="leg__limb" data-limb="front" d="" />
+              <path class="leg__toes" data-toes="front" d="" />
+            </g>
+          </g>
+
+          <g class="bird__body" data-body>
+            <!-- tail -->
+            <path class="bird__tail" d="M62 132 14 96l14 44-16 34 54 12z" />
+            <!-- one blob is the head and the body both: that is the whole charm
+                 of the reference bird, and it is also why nothing here needs a
+                 neck joint -->
+            <ellipse class="bird__blob" cx="118" cy="142" rx="72" ry="76" />
+
+            <!-- The head rides separately: a walking bird holds its head still
+                 in space and then thrusts it forward to catch up. That jerk is
+                 most of what reads as "bird" rather than "blob on legs". -->
+            <g class="bird__head" data-head>
+            <g class="bird__crest">
+              <path d="M96 74c-6-16-2-30 8-38 2 14 8 22 14 28z" />
+              <path d="M118 66c-2-18 4-30 16-36-2 14 0 24 4 32z" />
+              <path d="M140 72c4-16 14-25 26-26-8 11-11 21-10 31z" />
+            </g>
+
+            <path class="bird__beak" d="M176 120l40 11-40 12z" />
+
+            <g class="bird__eye" data-eye>
+              <circle class="eye__white" cx="152" cy="112" r="16" />
+              <circle class="eye__pupil" data-pupil cx="152" cy="112" r="7" />
+              <circle class="eye__spark" cx="147" cy="106" r="2.6" />
+            </g>
+            </g>
+
+            <!-- the plumage marks, straight off the reference: a run of dots
+                 down the flank and one white swirl on the wing -->
+            <g class="bird__spots">
+              <circle cx="92" cy="150" r="4.4" /><circle cx="80" cy="176" r="4.4" />
+              <circle cx="100" cy="192" r="4.4" /><circle cx="120" cy="204" r="4.4" />
+              <circle cx="72" cy="132" r="4.4" /><circle cx="144" cy="200" r="4.4" />
+            </g>
+
+            <g class="bird__wing" data-wing>
+              <ellipse class="wing__plate" cx="140" cy="166" rx="36" ry="44" />
+              <path class="wing__swirl" d="M156 152c-18 0-32 12-32 26 0 12 9 20 21 20" />
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Layer 6 — the arm. Its own SVG in scene coordinates: the bird can
+           flip without ever taking the hand off the glass. -->
+      <svg class="arm" data-arm aria-hidden="true">
+        <path class="arm__limb" data-arm-limb d="" />
+        <circle class="arm__hand" data-arm-hand r="13" cx="0" cy="0" />
+      </svg>
+
+      <!-- Layer 7 — the glass. The handle turns to point back down the arm. -->
+      <div class="lens" data-lens aria-hidden="true">
+        <span class="lens__handle"></span>
+        <span class="lens__ring"></span>
+        <span class="lens__glass"></span>
+      </div>
+
+      <!-- The bird's running commentary. Reserved space, so nothing reflows
+           when it speaks. -->
+      <p class="bubble" data-bubble aria-hidden="true"><span data-bubble-text>Hmm.</span></p>
+    </section>
+
+    <!--
+      The page, and deliberately almost nothing of it. A 404 has one job: say
+      what happened and offer the way out. The scene above already says it in
+      pictures — a bird sweeping an empty floor — so every line that repeated
+      that in words has gone, and the space went to the scene instead.
+
+      What is left is a heading, four words, and a door. The affordance line
+      and the reduced-motion notice still exist, but only for screen readers:
+      spoken where it helps, silent where the picture already says it.
+    -->
+    <section class="copy">
+      <h1 class="copy__title">Page Not Found</h1>
+      <p class="copy__sub">Nothing at this address.</p>
+      <p class="copy__actions">
+        <a class="btn btn--go" href="./">Back to Home</a>
+      </p>
+      <p class="u-sr" role="status" data-hint>Move your cursor over the scene — the magnifying glass follows it.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
