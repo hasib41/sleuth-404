@@ -75,7 +75,7 @@ const THRUST = 9;                 /* head hold-and-thrust, twice per cycle */
    a bird crossing the board at four body-lengths a second on a 46px stride,
    which does not read as fast, it reads as a flicker. Capping the speed is what
    makes the gait legible. */
-const MAX_SPEED = 1.15;
+const MAX_SPEED = 1.3;
 
 /* Where a foot must be, relative to its hip, at gait phase u ∈ [0,1).
 
@@ -111,6 +111,15 @@ function solveLeg(hip, foot) {
   };
 }
 
+/* The glass does not sit ON the pointer, it hangs off it — up and to the left,
+   by a little more than its own radius, so the pointer ends up just outside the
+   rim at the bottom right, the way a hand holds a magnifier by the handle.
+
+   Two things fall out of that, and both matter more than the look: the system
+   cursor never covers the one thing the page is about, and on a touch screen
+   the disc is not underneath your finger. */
+const LENS_OFF = -0.78;
+
 /* Where the arm leaves the body, in view-box coordinates. */
 const SHOULDER = { x: 150, y: 158 };
 /* Where the bird's voice comes from. */
@@ -131,6 +140,11 @@ function measure() {
   M.birdH = bird.offsetHeight;
   M.scale = bird.offsetHeight / 260 || 1;
   M.lensR = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lens-r')) || 74;
+  M.offX = M.offY = M.lensR * LENS_OFF;
+  /* Published, so anything driving this page from outside — the recording rig —
+     can aim at a POINT ON THE FLOOR and know where to put the pointer for it,
+     instead of hardcoding a copy of this number. */
+  scene.dataset.lensOff = `${M.offX.toFixed(1)},${M.offY.toFixed(1)}`;
 }
 
 /* view-box point → scene pixels, with the mirror applied */
@@ -467,11 +481,13 @@ function point(e) {
   if (reduced.matches) return;
 
   const r = scene.getBoundingClientRect();
-  S.tlx = clamp(e.clientX - r.left, M.lensR + 6, r.width - M.lensR - 6);
+  /* pointer in, glass out: the target is the pointer plus the offset, and every
+     clamp below is about where the GLASS may go, never the cursor. */
+  S.tlx = clamp(e.clientX - r.left + M.offX, M.lensR + 6, r.width - M.lensR - 6);
   /* Vertically the glass is kept inside his working envelope: no higher than
      he can hold it, no lower than the boards. Above that band there is nothing
      to read anyway — the address is in the middle of the room. */
-  S.tly = clamp(e.clientY - r.top, M.groundY - bird.offsetHeight * 1.25, M.groundY - 12);
+  S.tly = clamp(e.clientY - r.top + M.offY, M.groundY - bird.offsetHeight * 1.25, M.groundY - 12);
 
   if (!S.live) {
     S.live = true;
